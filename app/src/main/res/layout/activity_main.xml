@@ -57,6 +57,14 @@
             android:text="@string/true_button" />
 
         <Button
+            android:id="@+id/cheat_button"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="Cheat" />
+
+        <Button
             android:id="@+id/false_button"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"

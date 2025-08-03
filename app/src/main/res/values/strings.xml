@@ -6,7 +6,7 @@
     <string name="incorrect_toast">Incorrect!</string>
     <string name="prev_button">Previous</string>
     <string name="next_button">Next</string>
-
+    <string name="back_button">Back</string>
     <string name="question_01">Is Australia a continent?</string>
     <string name="question_02">The Pacific Ocean is larger than the Atlantic Ocean.</string>
     <string name="question_03">Africa is the largest continent.</string>

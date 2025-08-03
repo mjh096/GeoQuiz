@@ -1,5 +1,6 @@
 package com.example.geoquiz
 
+import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -10,6 +11,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.activity.viewModels
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 
 private const val TAG = "MainActivity"
 
@@ -21,8 +25,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nextButton: Button
     private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
+    private lateinit var cheatButton: Button
 
     private val quizViewModel: QuizViewModel by viewModels()
+
+    private lateinit var cheatLauncher: ActivityResultLauncher<Intent>
 
     // Save currentIndex to survive process death and restore question after app is killed/restarted
     override fun onSaveInstanceState(outState: Bundle) {
@@ -53,6 +60,7 @@ class MainActivity : AppCompatActivity() {
         prevButton = findViewById(R.id.prev_button)
         nextButton = findViewById(R.id.next_button)
         questionTextView = findViewById(R.id.question_text_view)
+        cheatButton = findViewById(R.id.cheat_button)
 
         // Sets the question text when the activity loads
         updateQuestion()
@@ -74,6 +82,25 @@ class MainActivity : AppCompatActivity() {
             quizViewModel.currentIndex = if (quizViewModel.currentIndex - 1 < 0) 4
             else quizViewModel.currentIndex - 1
             updateQuestion()
+        }
+
+        // Event listener: Handles Cheat button click
+        cheatButton.setOnClickListener {
+            val answerIsTrue = quizViewModel.currentQuestionAnswer
+            val intent = CheatActivity.newIntent(this, answerIsTrue)
+            cheatLauncher.launch(intent)
+        }
+
+        cheatLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val isCheater = result.data?.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false) ?: false
+                // Optionally store this in ViewModel if you want to track cheating
+                if (isCheater) {
+                    Toast.makeText(this, "You cheated!", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
