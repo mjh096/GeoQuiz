@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.activity.viewModels
 
 private const val TAG = "MainActivity"
 
@@ -21,17 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
 
-    // List of questions
-    private val questionBank = listOf(
-        Question(R.string.question_01, true),
-        Question(R.string.question_02, true),
-        Question(R.string.question_03, false),
-        Question(R.string.question_04, true),
-        Question(R.string.question_05, true)
-    )
-
-    // Tracks the current question being shown
-    private var currentIndex = 0
+    private val quizViewModel: QuizViewModel by viewModels()
 
     // Controller: Called when Activity is created
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,14 +51,14 @@ class MainActivity : AppCompatActivity() {
 
         // Event listener: Handles Next button click
         nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            quizViewModel.currentIndex = (quizViewModel.currentIndex + 1) % 5
             updateQuestion()
         }
 
         // Event listener: Handles Previous button click
         prevButton.setOnClickListener {
-            currentIndex = if (currentIndex - 1 < 0) questionBank.size - 1
-            else currentIndex - 1
+            quizViewModel.currentIndex = if (quizViewModel.currentIndex - 1 < 0) 4
+            else quizViewModel.currentIndex - 1
             updateQuestion()
         }
     }
@@ -99,13 +90,13 @@ class MainActivity : AppCompatActivity() {
 
     // Sets the text of the question on the view
     private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionTextResId
         questionTextView.setText(questionTextResId)
     }
 
     // Checks the user's answer and shows a toast
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
         val messageResId = if (userAnswer == correctAnswer) {
             R.string.correct_toast
         } else {
