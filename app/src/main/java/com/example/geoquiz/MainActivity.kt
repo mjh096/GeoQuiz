@@ -24,10 +24,24 @@ class MainActivity : AppCompatActivity() {
 
     private val quizViewModel: QuizViewModel by viewModels()
 
+    // Save currentIndex to survive process death and restore question after app is killed/restarted
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("current_index", quizViewModel.currentIndex)
+    }
+
     // Controller: Called when Activity is created
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Restore saved currentIndex from bundle if app was previously killed
+        if (savedInstanceState != null) {
+            quizViewModel.currentIndex = savedInstanceState.getInt("current_index", 0)
+        }
+
+        // Log OnCreate()
         Log.d(TAG, "onCreate() called")
+
         enableEdgeToEdge()
 
         // Loads GUI layout
