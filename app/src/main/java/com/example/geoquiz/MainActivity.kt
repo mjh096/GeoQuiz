@@ -98,6 +98,7 @@ class MainActivity : AppCompatActivity() {
                 val isCheater = result.data?.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false) ?: false
                 // Optionally store this in ViewModel if you want to track cheating
                 if (isCheater) {
+                    quizViewModel.isCheater = true
                     Toast.makeText(this, "Cheating is Wrong!", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -138,11 +139,17 @@ class MainActivity : AppCompatActivity() {
     // Checks the user's answer and shows a toast
     private fun checkAnswer(userAnswer: Boolean) {
         val correctAnswer = quizViewModel.currentQuestionAnswer
-        val messageResId = if (userAnswer == correctAnswer) {
-            R.string.correct_toast
+
+        val messageResId = if (quizViewModel.isCheater) {
+            R.string.cheat_toast  // This should say "You Cheated"
         } else {
-            R.string.incorrect_toast
+            if (userAnswer == correctAnswer) {
+                R.string.correct_toast
+            } else {
+                R.string.incorrect_toast
+            }
         }
+
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
 }

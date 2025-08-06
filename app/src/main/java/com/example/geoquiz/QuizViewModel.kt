@@ -20,6 +20,14 @@ class QuizViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
             savedStateHandle["currentIndex"] = value
         }
 
+    var isCheater: Boolean
+        get() = savedStateHandle.get(IS_CHEATER_KEY) ?: false
+        set(value) = savedStateHandle.set(IS_CHEATER_KEY, value)
+
+    companion object {
+        private const val IS_CHEATER_KEY = "isCheater"
+    }
+
     val currentQuestionAnswer: Boolean
         get() = questionBank[currentIndex].answer
 
