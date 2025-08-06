@@ -1,6 +1,8 @@
 package com.example.geoquiz
 
+import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -8,6 +10,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.activity.viewModels
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+
+private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,22 +25,30 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nextButton: Button
     private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
+    private lateinit var cheatButton: Button
 
-    // List of questions
-    private val questionBank = listOf(
-        Question(R.string.question_01, true),
-        Question(R.string.question_02, true),
-        Question(R.string.question_03, false),
-        Question(R.string.question_04, true),
-        Question(R.string.question_05, true)
-    )
+    private val quizViewModel: QuizViewModel by viewModels()
 
-    // Tracks the current question being shown
-    private var currentIndex = 0
+    private lateinit var cheatLauncher: ActivityResultLauncher<Intent>
+
+    // Save currentIndex to survive process death and restore question after app is killed/restarted
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("current_index", quizViewModel.currentIndex)
+    }
 
     // Controller: Called when Activity is created
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Restore saved currentIndex from bundle if app was previously killed
+        if (savedInstanceState != null) {
+            quizViewModel.currentIndex = savedInstanceState.getInt("current_index", 0)
+        }
+
+        // Log OnCreate()
+        Log.d(TAG, "onCreate() called")
+
         enableEdgeToEdge()
 
         // Loads GUI layout
@@ -44,43 +60,84 @@ class MainActivity : AppCompatActivity() {
         prevButton = findViewById(R.id.prev_button)
         nextButton = findViewById(R.id.next_button)
         questionTextView = findViewById(R.id.question_text_view)
+        cheatButton = findViewById(R.id.cheat_button)
 
         // Sets the question text when the activity loads
         updateQuestion()
 
         // Event listener: Handles True button click
-        trueButton.setOnClickListener {
-            checkAnswer(true)
-        }
+        trueButton.setOnClickListener {checkAnswer(true)}
 
         // Event listener: Handles False button click
-        falseButton.setOnClickListener {
-            checkAnswer(false)
-        }
+        falseButton.setOnClickListener {checkAnswer(false)}
 
         // Event listener: Handles Next button click
         nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            quizViewModel.currentIndex = (quizViewModel.currentIndex + 1) % 5
             updateQuestion()
         }
 
         // Event listener: Handles Previous button click
         prevButton.setOnClickListener {
-            currentIndex = if (currentIndex - 1 < 0) questionBank.size - 1
-            else currentIndex - 1
+            quizViewModel.currentIndex = if (quizViewModel.currentIndex - 1 < 0) 4
+            else quizViewModel.currentIndex - 1
             updateQuestion()
         }
+
+        // Event listener: Handles Cheat button click
+        cheatButton.setOnClickListener {
+            val answerIsTrue = quizViewModel.currentQuestionAnswer
+            val intent = CheatActivity.newIntent(this, answerIsTrue)
+            cheatLauncher.launch(intent)
+        }
+
+        cheatLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val isCheater = result.data?.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false) ?: false
+                // Optionally store this in ViewModel if you want to track cheating
+                if (isCheater) {
+                    Toast.makeText(this, "You cheated!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Log.d(TAG, "onStart() called")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "onResume() called")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "onPause() called")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(TAG, "onStop() called")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy() called")
     }
 
     // Sets the text of the question on the view
     private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionTextResId
         questionTextView.setText(questionTextResId)
     }
 
     // Checks the user's answer and shows a toast
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
         val messageResId = if (userAnswer == correctAnswer) {
             R.string.correct_toast
         } else {
