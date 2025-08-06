@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                 val isCheater = result.data?.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false) ?: false
                 // Optionally store this in ViewModel if you want to track cheating
                 if (isCheater) {
-                    Toast.makeText(this, "You cheated!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Cheating is Wrong!", Toast.LENGTH_SHORT).show()
                 }
             }
         }
